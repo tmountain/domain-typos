@@ -1,6 +1,7 @@
 <?php
 
-final class DomainTypos {
+final class DomainTypos
+{
     private static function notSame($elem) {
         list ($a, $b) = $elem;
         return $a != $b;
