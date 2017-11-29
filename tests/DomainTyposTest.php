@@ -4,62 +4,145 @@ use PHPUnit\Framework\TestCase;
 
 final class DomainTyposTest extends TestCase
 {
+    public function testEndsWith()
+    {
+        $this->assertEquals(
+            true, DomainTypos::endsWith('foobar', 'bar')
+        );
+        $this->assertEquals(
+            false, DomainTypos::endsWith('foobaz', 'bar')
+        );
+    }
+
+    public function testRepeat()
+    {
+        $this->assertEquals(
+            ['foo', 'foo', 'foo'], DomainTypos::repeat('foo', 3)
+        );
+
+        $this->assertEquals(
+            [], DomainTypos::repeat('foo', 0)
+        );
+
+        $this->assertEquals(
+            [], DomainTypos::repeat('foo', -1)
+        );
+    }
+
+    public function testMatchTLD()
+    {
+        $tlds = ['.com', '.co.uk'];
+
+        $this->assertEquals(
+            '.com', DomainTypos::matchTLD('gmail.com', $tlds)
+        );
+
+        $this->assertEquals(
+            '.co.uk', DomainTypos::matchTLD('foo.co.uk', $tlds)
+        );
+
+        $this->assertEquals(
+            '', DomainTypos::matchTLD('foo.org', $tlds)
+        );
+    }
+
+    public function testExtractHost()
+    {
+        $this->assertEquals(
+            'foo', DomainTypos::extractHost('foo.com', '.com')
+        );
+
+        $this->assertEquals(
+            'foo', DomainTypos::extractHost('foo.co.uk', '.co.uk')
+        );
+
+        $this->assertEquals(
+            '', DomainTypos::extractHost('foo.com', '.co.uk')
+        );
+    }
+
     public function testHammingDistance()
     {
         $this->assertEquals(
-            DomainTypos::hammingDistance('foo.com', 'foo.com'), 0
+            0, DomainTypos::hammingDistance('foo.com', 'foo.com')
         );
         $this->assertEquals(
-            DomainTypos::hammingDistance('fox.com', 'foo.com'), 1
+            1, DomainTypos::hammingDistance('fox.com', 'foo.com')
         );
         $this->assertEquals(
-            DomainTypos::hammingDistance('box.com', 'foo.com'), 2
+            2, DomainTypos::hammingDistance('box.com', 'foo.com')
         );
         $this->assertEquals(
-            DomainTypos::hammingDistance('box.com', 'fo.com'), -1
+            -1, DomainTypos::hammingDistance('box.com', 'fo.com')
         );
     }
 
     public function testDomain()
     {
         $this->assertEquals(
-            DomainTypos::domain('foo@example.com'), 'example.com'
+            'example.com', DomainTypos::domain('foo@example.com')
         );
         $this->assertEquals(
-            DomainTypos::domain('foo'), ''
+            '', DomainTypos::domain('foo')
         );
         $this->assertEquals(
-            DomainTypos::domain(''), ''
+            '', DomainTypos::domain('')
         );
     }
 
     public function testIsTypo()
     {
-        $domains = ['gmail.com'];
+        $domains = ['gmail.com', 'bar.co.uk'];
+        $tlds = ['.com'];
 
         // not a typo
         $this->assertEquals(
-            DomainTypos::isTypo('foo@gmail.com', 1, $domains), false
+            false, DomainTypos::isTypo('foo@gmail.com', 1, $domains, $tlds)
         );
 
-        // one character off (default threshold)
+        // one character off (threshold=1)
         $this->assertEquals(
-            DomainTypos::isTypo('foo@gnail.com', 1, $domains), true
+            true, DomainTypos::isTypo('foo@gnail.com', 1, $domains, $tlds)
         );
 
         // different lengths (should not match)
         $this->assertEquals(
-            DomainTypos::isTypo('foo@gmailz.com', 1, $domains), false
+            false, DomainTypos::isTypo('foo@gmailz.com', 1, $domains, $tlds)
         );
 
-        // two characters off (default threshold)
+        // shouldn't match because tlds don't match
         $this->assertEquals(
-            DomainTypos::isTypo('foo@ganil.com', 1, $domains), false
+            false, DomainTypos::isTypo('foo@gmail.com', 1, $domains, ['.co.uk'])
+        );
+
+        // shouldn't match because tlds don't match
+        $this->assertEquals(
+            false, DomainTypos::isTypo('fox@bar.co.uk', 1, $domains, $tlds)
+        );
+
+        // should match because tlds match and one character off
+        $this->assertEquals(
+            true, DomainTypos::isTypo('foo@baz.co.uk', 1, $domains, ['.com', '.co.uk'])
+        );
+
+        // not a typo
+        $this->assertEquals(
+            false, DomainTypos::isTypo('foo@bar.co.uk', 1, $domains, ['.com', '.co.uk'])
+        );
+
+        // shouldn't match because tlds don't match
+        $this->assertEquals(
+            false, DomainTypos::isTypo('foo@gmail.cox', 1, $domains, $tlds)
+        );
+
+        // two characters off (threshold=1)
+        $this->assertEquals(
+            false, DomainTypos::isTypo('foo@ganil.com', 1, $domains, $tlds)
         );
 
         // two characters off (threshold=2)
         $this->assertEquals(
-            DomainTypos::isTypo('foo@ganil.com', 2, $domains), true
+            true, DomainTypos::isTypo('foo@ganil.com', 2, $domains, $tlds)
         );
 
         $domains = ['gmail.com', 'yahoo.com'];
@@ -67,17 +150,17 @@ final class DomainTyposTest extends TestCase
 
         // not a typo
         $this->assertEquals(
-            DomainTypos::isTypo('foo@yahoo.com', 1, $domains), false
+            false, DomainTypos::isTypo('foo@yahoo.com', 1, $domains, $tlds)
         );
 
-        // two chars diff (default threshold)
+        // two chars diff (threshold=1)
         $this->assertEquals(
-            DomainTypos::isTypo('foo@ayhoo.com', 1, $domains), false
+            false, DomainTypos::isTypo('foo@ayhoo.com', 1, $domains, $tlds)
         );
 
         // two chars off (threshold=2)
         $this->assertEquals(
-            DomainTypos::isTypo('foo@ayhoo.com', 2, $domains), true
+            true, DomainTypos::isTypo('foo@ayhoo.com', 2, $domains, $tlds)
         );
     }
 }
