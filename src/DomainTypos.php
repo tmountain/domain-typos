@@ -108,16 +108,30 @@ final class DomainTypos
         // constrain domains to those matching the tld
         $domains = array_filter($domains, $endsWithTLD);
 
+        // indicates if a match is found
+        $matchFound = false;
+
+        // typically all domains with the same TLD
+        // have to be analyzed so that we can rule out
+        // exact matches. this handles situations like
+        // ymail.com (a valid domain) reporting as a typo
+        // on gmail.com.
         foreach ($domains as $domain) {
             $domain = self::extractHost($domain, $tld);
+
+            // if an exact match is found, it's not a typo
+            if ($host === $domain) {
+                return false;
+            }
+
             if (strlen($host) === strlen($domain)) {
                 $distance = self::hammingDistance($host, $domain);
                 if ($distance <= $threshold && $distance > 0) {
-                    return true;
+                    $matchFound = true;
                 }
             }
         }
-        return false;
+        return $matchFound;
     }
 }
 ?>

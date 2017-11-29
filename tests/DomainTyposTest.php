@@ -162,6 +162,11 @@ final class DomainTyposTest extends TestCase
         $this->assertEquals(
             true, DomainTypos::isTypo('foo@ayhoo.com', 2, $domains, $tlds)
         );
+
+        // gmail vs ymail test (both valid)
+        $this->assertEquals(
+            false, DomainTypos::isTypo('foo@ymail.com', 1, ['gmail.com', 'ymail.com'], $tlds)
+        );
     }
 }
 ?>
