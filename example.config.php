@@ -45,7 +45,7 @@ $config = [
     "hotmail.com.ar", "yahoo.com.ar", "fibertel.com.ar", "speedy.com.ar", "arnet.com.ar",
 
     # mexico
-    "yahoo.com.mx", "hotmail.es", "hotmail.com.mx", "prodigy.net.mx", "msn.com",
+    "yahoo.com.mx", "hotmail.es", "hotmail.com.mx", "prodigy.net.mx",
 
     # brazil
     "yahoo.com.br", "hotmail.com.br", "outlook.com.br", "itelefonica.com.br",
